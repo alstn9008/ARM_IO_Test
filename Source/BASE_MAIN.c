@@ -151,6 +151,8 @@ unsigned char Result=0;
 //-----------------------------------------------------------------------------            
 	//2
 
+
+	//3
 int main()
 {
 	int i = 0;
@@ -160,23 +162,26 @@ int main()
 	
 	while(1) 
 	{
-		// LED off
 		rPIO_CODR_B=(LED1|LED2|LED3);
 		for(i = 0; i < 10; ++i) Delay(100000);
-		N = n%3;
+		N = n%4;
 		switch(N)
 		{		
 		case 0:
-				rPIO_SODR_B=(LED3);
+				rPIO_SODR_B=(LED1);
 				break;
 		case 1:
 				rPIO_SODR_B=(LED2);
 				break;
 		case 2:
-				rPIO_SODR_B=(LED1);
+				rPIO_SODR_B=(LED3);
+				break;
+		case 3:
+				rPIO_SODR_B=(LED2);
 				break;
 		}
 		for(i = 0; i < 10; ++i) Delay(100000);
 		n++;
 	}	
 }
+	
