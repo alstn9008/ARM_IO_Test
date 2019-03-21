@@ -157,8 +157,19 @@ unsigned char Result=0;
 int main()
 {
 	int i = 0;
+	int n = 0;
   	Port_Setup();
-	while(1) 
+  	DBG_Init();
+  	Uart_Printf("Hello World\n\r");
+  	
+  	while(1)
+  	{
+  		Uart_Printf("n = %d\n\r",n);
+  		n++;
+  	}
+  		
+}
+/*while(1) 
 	{
 		rPIO_CODR_B=(LED1|LED2|LED3);
 		for(i = 0; i < 10; ++i) Delay(100000);
@@ -178,7 +189,6 @@ int main()
 				break;
 		}
 		for(i = 0; i < 10; ++i) Delay(100000);
-	}	
-}
+	}*/
 
 	
