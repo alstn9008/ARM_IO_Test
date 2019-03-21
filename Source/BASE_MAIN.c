@@ -150,28 +150,25 @@ unsigned char Result=0;
 /// Main Procedure
 //-----------------------------------------------------------------------------            
 	//2
-
-
 	//3
+	
+	
+	
 int main()
 {
 	int i = 0;
-	int n = 0;
-	int N;
   	Port_Setup();
-	
 	while(1) 
 	{
 		rPIO_CODR_B=(LED1|LED2|LED3);
 		for(i = 0; i < 10; ++i) Delay(100000);
-		N = n%4;
 		switch(N)
 		{		
 		case 0:
 				rPIO_SODR_B=(LED1);
 				break;
 		case 1:
-				rPIO_SODR_B=(LED2);
+		 		rPIO_SODR_B=(LED2);
 				break;
 		case 2:
 				rPIO_SODR_B=(LED3);
@@ -181,7 +178,7 @@ int main()
 				break;
 		}
 		for(i = 0; i < 10; ++i) Delay(100000);
-		n++;
 	}	
 }
+
 	
