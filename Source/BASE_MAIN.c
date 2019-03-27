@@ -151,28 +151,22 @@ unsigned char Result=0;
 //-----------------------------------------------------------------------------            
 	//2
 	//3
-	
-	
-	
 int main()
 {
-	int nF = 0;
-	int n = 0;
-	int n2 = 0;	
-	int i;
-
+	int i,n=0;
+	int re=1;
+  	DBG_Init();
   	while(1)
   	{
-  		n2 = nF-1;
-  		for(i = n;i<0;i--)
-  		{
-			n2 = nF-1;
-  			nF = n2*nF;
-  		}  		 	
-  	  	Delay(10000);
-  		nF++;
+		re=1;
+		for(i=1;i<=n;++i)
+		{
+			re*=i;
+		}
+  		Uart_Printf("%d! = %d\n\r",n,re);
+		for(i=0;i<10;i++)Delay(100000);
+  		n++;
   	}
-  		
 }
 
 
