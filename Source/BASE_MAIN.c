@@ -156,48 +156,21 @@ unsigned char Result=0;
 	
 int main()
 {
-	int i = 0;
+	int nF = 0;
 	int n = 0;
-	int Bin = 0;
-	int K = 0, L = 0;
-  	Port_Setup();
-  	DBG_Init();
-  	Uart_Printf("Hello World\n\r");
-  	
- 
+	int n2 = 0;	
+	int i;
 
   	while(1)
   	{
-  	  	K = Bin%4;
-  		L = Bin/4;
-  		rPIO_CODR_B=(LED1|LED2|LED3);
-		for(i = 0; i < 10; ++i) Delay(100000);
-  		
-		switch(K)
-		{		
-		case 1:
-		 		rPIO_SODR_B=(LED1);
-				break;
-		case 2:
-				rPIO_SODR_B=(LED2);
-				break;
-		case 3:
-				rPIO_SODR_B=(LED1);
-				rPIO_SODR_B=(LED2);
-				break;
-		}
-		for(i = 0; i < 10; ++i) Delay(500000);
-		  		
-		switch(L)
-		{		
-		case 1:
-		 		rPIO_SODR_B=(LED3);
-				break;
-		}
-		for(i = 0; i < 10; ++i) Delay(500000);
-		Bin++;
-	 	if(Bin == 8)
-  		Bin = 0;
+  		n2 = nF-1;
+  		for(i = n;i<0;i--)
+  		{
+			n2 = nF-1;
+  			nF = n2*nF;
+  		}  		 	
+  	  	Delay(10000);
+  		nF++;
   	}
   		
 }
