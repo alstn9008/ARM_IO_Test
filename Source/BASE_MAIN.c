@@ -151,24 +151,24 @@ unsigned char Result=0;
 //-----------------------------------------------------------------------------            
 	//2
 	//3
-int Factorial(int n);
+int Fibonacci(int n);
 int main()
 { 	
-	int i,n=0;
+	int i,n=1;
   	DBG_Init();
   	while(1)
   	{
-  		Uart_Printf("%d! = %d\n\r",n,Factorial(n));
+  		Uart_Printf("A%d! = %d\n\r",n,Fibonacci(n));
 		for(i=0;i<100;i++)Delay(100000);
 		n++;
   	}
 }
-int Factorial(int n)
+int Fibonacci(int n)
 {
-	if(n==0)
+	if(n==1 || n==2)
 	{
 		return 1;
 	}
 	
- 	return n * Factorial(n-1);
+ 	return Fibonacci(n-1) + Fibonacci(n-2);
 }  
