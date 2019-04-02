@@ -151,23 +151,24 @@ unsigned char Result=0;
 //-----------------------------------------------------------------------------            
 	//2
 	//3
+int Factorial(int n);
 int main()
-{
+{ 	
 	int i,n=0;
-	int re=1;
   	DBG_Init();
   	while(1)
   	{
-		re=1;
-		for(i=1;i<=n;++i)
-		{
-			re*=i;
-		}
-  		Uart_Printf("%d! = %d\n\r",n,re);
-		for(i=0;i<10;i++)Delay(100000);
-  		n++;
+  		Uart_Printf("%d! = %d\n\r",n,Factorial(n));
+		for(i=0;i<100;i++)Delay(100000);
+		n++;
   	}
 }
-
-
+int Factorial(int n)
+{
+	if(n==0)
+	{
+		return 1;
+	}
 	
+ 	return n * Factorial(n-1);
+}  
