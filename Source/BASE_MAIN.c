@@ -205,12 +205,15 @@ void HW_delay_ms(unsigned int ms)
 }
 
 int main()
-{ 	
+{
+	 	
 	int ms0 = 0;
 	int s0 = 0;
 	int m0 = 0;
 	int h0 = 0;
+	int i;
 	
+	Port_Setup();
   	DBG_Init();
 	PIT_initiailize();
 
@@ -220,23 +223,38 @@ int main()
  		{	
 			s0++;
 			ms0 = 0;
+			rPIO_SODR_B=LED3; 
 		}
+		
 		if(s0 == 60)
 		{
 			m0++;
 			s0 = 0;
+			rPIO_SODR_B=LED2; 
+
 		}
+		
 		if(m0 == 60)
 		{
 			h0++;
 			m0 = 0;
+			rPIO_SODR_B=LED1; 		
 		}
+	
 		if(h0 == 24)
 		{	
 			h0 = 0;
 		}
-		Uart_Printf("\r%02d : %02d : %02d : %02d",h0,m0,s0,ms0);
-		HW_delay_ms(10);
+		
+		Uart_Printf("\r%02d : %02d : %02d : %02d",h0,m0,s0,ms0);		
+		
+		
+		HW_delay_ms(5);
+		rPIO_CODR_B=LED3;
+		rPIO_CODR_B=LED2;
+		rPIO_CODR_B=LED1;
+		HW_delay_ms(5);
+			
 		ms0++;
 	}
 }
