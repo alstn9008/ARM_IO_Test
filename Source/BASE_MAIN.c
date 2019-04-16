@@ -204,18 +204,44 @@ void HW_delay_ms(unsigned int ms)
 	AT91F_PITDisableInt(AT91C_BASE_PITC);
 }
 
+
+
+//Global varibale
+int ms0 = 0, s0 = 0, m0 = 0, h0 = 0;
+
+//PIO interrupt sevice routine
+void PIO_ISR()
+{
+	//Reset the stop watch
+	ms0 = 0;
+	s0 = 0;
+	m0 = 0;
+	h0 = 0;
+}
+
+void Interrupt_setup()
+{
+	// Use SW1 as an input
+	AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA, SW1);
+
+	// Set interrupt to SW1
+	AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, SW1);
+
+	// Set callback function
+	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC, AT91C_ID_PIOA, 7, 1, PIO_ISR);
+
+	// Enable AIC
+	//AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_BASE_PIOA);
+}
+
 int main()
 {
-	 	
-	int ms0 = 0;
-	int s0 = 0;
-	int m0 = 0;
-	int h0 = 0;
 	int i;
 	
 	Port_Setup();
   	DBG_Init();
 	PIT_initiailize();
+	Interrupt_setup();
 
   	while(1)
   	{
@@ -223,7 +249,8 @@ int main()
  		{	
 			s0++;
 			ms0 = 0;
-			rPIO_SODR_B=LED3; 
+			rPIO_SODR_B=LED3;
+			HW_delay_ms(5); 
 		}
 		
 		if(s0 == 60)
@@ -231,7 +258,7 @@ int main()
 			m0++;
 			s0 = 0;
 			rPIO_SODR_B=LED2; 
-
+			HW_delay_ms(5);
 		}
 		
 		if(m0 == 60)
@@ -239,22 +266,17 @@ int main()
 			h0++;
 			m0 = 0;
 			rPIO_SODR_B=LED1; 		
+			HW_delay_ms(5);
 		}
 	
 		if(h0 == 24)
 		{	
 			h0 = 0;
 		}
-		
-		Uart_Printf("\r%02d : %02d : %02d : %02d",h0,m0,s0,ms0);		
-		
-		
+
+		Uart_Printf("\r%02d : %02d : %02d : %02d",h0,m0,s0,ms0);
+		rPIO_CODR_B=(LED1|LED2|LED3);		
 		HW_delay_ms(5);
-		rPIO_CODR_B=LED3;
-		rPIO_CODR_B=LED2;
-		rPIO_CODR_B=LED1;
-		HW_delay_ms(5);
-			
 		ms0++;
 	}
 }
