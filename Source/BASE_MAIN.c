@@ -1,282 +1,179 @@
 #include "board.h"
-#include "AT91SAM7x.h"
-#include "myLIB.h"
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
-
 #include <pio/pio.h>
 #include <aic/aic.h>
+#include <dbgu/dbgu.h>
 #include <utility\trace.h>
 #include <cs8900a/cs8900a.h>
+#include <pwmc/pwmc.h>
 
-//For Switch
-#define LEFT	1
-#define RIGHT	2
 
-unsigned int 	Key_Count=0,Pre_Key_Data=0;
-unsigned char Switch_Check(void);
-unsigned char Port_Flag=0;
-unsigned int	Count=0; 
-//============================================================================
-//  Function  : PIT Interrupt
-//============================================================================
-void Isr_PIT(void)
+//LED Brightness degree
+/* 
+#define PWM_FREQUENCY 20000 //Hz
+#define MAX_DUTY_CYCLE 50
+#define MIN_DUTY_CYCLE 0
+#define MAX_DUTY_CYCLE_LED2 
+#define MIN_DUTY_CYCLE_LED2 0
+#define CHANNEL_PWM_LED1 1
+#define CHANNEL_PWM_LED2 2
+
+#define PIN_PWMC_LED1  {LED1, AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_B, PIO_DEFAULT}
+#define PIN_PWMC_LED2  {LED2, AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_B, PIO_DEFAULT}
+
+const Pin pins[] = 
 {
-    volatile unsigned int pit_pivr;
-	if((rPIT_SR & 1) != 0)  //The Periodic Interval timer has reached PIV since the last read of PIT_PIVR
-    {
-		pit_pivr = rPIT_PIVR;    //Reads Periodic Interval Timer Value Register - Clears PITS in PIT_SR
-//		Count++;
-//		if(Count==100)
-//		{
-//			Count=0;
-			if(Port_Flag==0)
-			{
-				rPIO_SODR_B=(LED1|LED2|LED3);
-				Port_Flag=1;
-			}
-			else
-			{
-				
-				rPIO_CODR_B=(LED1|LED2|LED3);
-				Port_Flag=0;
-			}	
-//		}		
+	PINS_DBGU,
+	PIN_PWMC_LED1,
+	PIN_PWMC_LED2
+};
+
+int main()
+{
+	//PIO setup
+	PIO_Configure(pins, PIO_LISTSIZE(pins));
+
+	//Enable PWM
+	AT91F_PWMC_CfgPMC();
+	
+	//Clock setting
+	PWMC_ConfigureClocks(PWM_FREQUENCY*MAX_DUTY_CYCLE, 0, BOARD_MCK);
+
+	//Channel
+	PWMC_ConfigureChannel(CHANNEL_PWM_LED1, AT91C_PWMC_CPRE_MCKA, 0, 0);
+	PWMC_ConfigureChannel(CHANNEL_PWM_LED2, AT91C_PWMC_CPRE_MCKA, 0, 0);
+	
+	//Period
+	PWMC_SetPeriod(CHANNEL_PWM_LED1, MAX_DUTY_CYCLE);
+	PWMC_SetPeriod(CHANNEL_PWM_LED2, MAX_DUTY_CYCLE);
+
+	//Duty cycle
+	PWMC_SetDutyCycle(CHANNEL_PWM_LED1, 0);
+	PWMC_SetDutyCycle(CHANNEL_PWM_LED2, 40);
+
+	//Enable channel
+	PWMC_EnableChannel(CHANNEL_PWM_LED1);
+	PWMC_EnableChannel(CHANNEL_PWM_LED2);
+
+	while(true)
+	{
+
 	}
-}
-void 	PIT_Interrupt_Setup(void) 
-{
-	unsigned int	tmp=0;
-
-    rAIC_IECR = (1<<1);
-
-	// System Advanced Interrupt Controller
-    rAIC_SMR1 = (1<<5) +  (7<<0);  //Edge Trigger, Prior 7
-    rAIC_SVR1 = (unsigned)Isr_PIT;
-
-	// System Periodic Interval Timer (PIT) Mode Register (MR)
-
-	// PITEN(24) - Periodic Interval Timer Enabled
-	// unsigned int PITEN = (1<<24);
-
-	// PITIEN(25) - Periodic Interval Timer Interrupt Enabled
-	// unsigned int PITIEN = (1<<25);
-
-	// PIV(19:0) - Periodic Interval Time
-	// will be compared with 20-bit CPIV (Counter of Periodic Interval Timer)
-    tmp=(48000000/16/100)&0xFFFFF;         // T=30Hz
-	// unsigned int PIV = 0;
-	// PIV = (48000000/16/100)&0xFFFFF;
-
-    rPIT_MR=(1<<25)+(1<<24)+(tmp<<0);      // Enable PIT, Disable Interrupt
-	// rPIT_MR = PITIEN + PITEN + PIV;
-}
+	return 0;
+}*/
 
 
-void Port_Setup(void)
-{
-	// PMC (Power Management Clock) enables peripheral clocks
-	AT91F_PMC_EnablePeriphClock ( AT91C_BASE_PMC, 1 << AT91C_ID_PIOB );
-	AT91F_PMC_EnablePeriphClock ( AT91C_BASE_PMC, 1 << AT91C_ID_PIOA );
-	
-	// Enable PIO in output mode: Port A 0-7
-	AT91F_PIO_CfgOutput( AT91C_BASE_PIOA,  PORTA);
+//dot matrix
 
-	// LED (Port B: 28-30)
-	AT91F_PIO_CfgOutput( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // output mode
-	AT91F_PIO_CfgPullup( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // pull-up
+//row 0 3 5 8 9 12 14 15
 
-	// Switch (Port A: 8,9)
-	AT91F_PIO_CfgInput( AT91C_BASE_PIOA, SW1|SW2 ); // output mode
-	AT91F_PIO_CfgPullup( AT91C_BASE_PIOA, SW1|SW2 ); // pull-up
+#define ROW1 PA12
+#define ROW2 PA2
+#define ROW3 PA3
+#define ROW4 PA10
+#define ROW5 PA5
+#define ROW6 PA9
+#define ROW7 PA14
+#define ROW8 PA15
 
-//AT91F_PIO_SetOutput(AT91C_BASE_PIOA, (1<<13));
-//AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, (1<<13));
-	
-}
-/*
-void Read_For_Setup_CMOS(void)
-{
+#define COL1 PA4
+#define COL2 PA1
+#define COL3 PA6
+#define COL4 PA0
+#define COL5 PA11
+#define COL6 PA7
+#define COL7 PA13
+#define COL8 PA8
 
-	//Read address Reset
-	rPIO_CODR_A=FIFO_RD_RST;			
-	rPIO_SODR_A=FIFO_RD;
-	rPIO_CODR_A=FIFO_RD;
-	rPIO_SODR_A=FIFO_RD;
-	rPIO_CODR_A=FIFO_RD;
-	rPIO_SODR_A=FIFO_RD_RST;
+volatile unsigned int ten_us_count = 0;
 
-	//Write On		
-	//rPIO_SODR_A=XCLK_ON;
-	rPIO_SODR_A=HREF_SYNC;
-			
-	//Until Wait Low
-	while((rPIO_PDSR_A & 0x00000004)){}
-	//Until Wait High
-	while(!(rPIO_PDSR_A & 0x00000004)){}
-			
-	//Write Off		
-	//rPIO_CODR_A=HREF_SYNC;
-			
-	//CS_LOW
-	rPIO_CODR_A=FIFO_CS;
-
-}
-
-void CMOS_Read_Clk(void)
-{
-	rPIO_SODR_A=FIFO_RD;
-	rPIO_CODR_A=FIFO_RD;
-}
-*/
-
-unsigned char Switch_Check(void)
-{
-unsigned char Result=0;
-
-	if(!(rPIO_PDSR_A & SW1)) Result=LEFT;
-	else if(!(rPIO_PDSR_A & SW2)) Result=RIGHT;
-	
-	
-	if(Pre_Key_Data==Result) Key_Count++;
-	else Key_Count=0;
-	
-	Pre_Key_Data=Result;
-	return	Result;
-}
-//-----------------------------------------------------------------------------
-/// Main Procedure
-//-----------------------------------------------------------------------------            
-	//2
-	//3
-
-
-// PIT interrupt service routine
-volatile unsigned int ms_count = 0;
-void PIT_ISR()
-{
-	// Clear PITS
-	AT91F_PITGetPIVR(AT91C_BASE_PITC);
-
-	// increase ms_count
-	ms_count++;
-}
-// Initialize PIT and interrupt
-void PIT_initiailize()
-{
-	// enable peripheral clock for PIT
-	AT91F_PITC_CfgPMC();
-
-	// set the period to be every 1 msec in 48MHz
-	AT91F_PITInit(AT91C_BASE_PITC, 1, 48);
-
-	// PIV (Periodic Interval Value) = 3000 clocks = 1 msec
-	// MCK/16 = 48,000,000 / 16 = 3,000,000 clocks/sec
-	AT91F_PITSetPIV(AT91C_BASE_PITC, 3000-1);
-
-	// disable PIT periodic interrupt for now
-	AT91F_PITDisableInt(AT91C_BASE_PITC);
-
-	// interrupt handler initializatioin
-	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC, AT91C_ID_SYS, 7, 1, PIT_ISR);
-
-	// enable the PIT interrupt
-	AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_ID_SYS);
-}
-// delay in ms by PIT interrupt
-void HW_delay_ms(unsigned int ms)
+void HW_delay_10us(unsigned int ten_us)
 {
 	// special case
-	if(ms == 0) return;
+	if(ten_us == 0) return;
 
 	// start time
-	ms_count = 0;
+	ten_us_count = 0;
 
 	// enable PIT interrupt
 	AT91F_PITEnableInt(AT91C_BASE_PITC);
 
-	// wait for ms
-	while(ms_count < ms);
+	// wait for us
+	while(ten_us_count < ten_us);
 
+	
 	// disable PIT interrupt
 	AT91F_PITDisableInt(AT91C_BASE_PITC);
 }
 
-
-
-//Global varibale
-int ms0 = 0, s0 = 0, m0 = 0, h0 = 0;
-
-//PIO interrupt sevice routine
-void PIO_ISR()
+void Port_Setup()
 {
-	//Reset the stop watch
-	ms0 = 0;
-	s0 = 0;
-	m0 = 0;
-	h0 = 0;
-}
 
-void Interrupt_setup()
-{
-	// Use SW1 as an input
-	AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA, SW1);
+	AT91F_PMC_EnablePeriphClock(AT91C_BASE_PMC, 1 << AT91C_ID_PIOA);
 
-	// Set interrupt to SW1
-	AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, SW1);
-
-	// Set callback function
-	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC, AT91C_ID_PIOA, 7, 1, PIO_ISR);
-
-	// Enable AIC
-	//AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_BASE_PIOA);
+	//LED
+	AT91F_PIO_CfgOutput( AT91C_BASE_PIOA, PORTA ); //output
+	AT91F_PIO_CfgPullup( AT91C_BASE_PIOA, PORTA ); //pull-up
 }
 
 int main()
 {
-	int i;
-	
+	//Port set-up
 	Port_Setup();
-  	DBG_Init();
-	PIT_initiailize();
-	Interrupt_setup();
 
-  	while(1)
-  	{
- 		if(ms0 == 100)
- 		{	
-			s0++;
-			ms0 = 0;
-			rPIO_SODR_B=LED3;
-			HW_delay_ms(5); 
-		}
-		
-		if(s0 == 60)
-		{
-			m0++;
-			s0 = 0;
-			rPIO_SODR_B=LED2; 
-			HW_delay_ms(5);
-		}
-		
-		if(m0 == 60)
-		{
-			h0++;
-			m0 = 0;
-			rPIO_SODR_B=LED1; 		
-			HW_delay_ms(5);
-		}
-	
-		if(h0 == 24)
-		{	
-			h0 = 0;
-		}
 
-		Uart_Printf("\r%02d : %02d : %02d : %02d",h0,m0,s0,ms0);
-		rPIO_CODR_B=(LED1|LED2|LED3);		
-		HW_delay_ms(5);
-		ms0++;
+	//loop
+	while(true)
+	{
+		// ROW1
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A =  COL1 | COL4 | COL5 | COL8;
+		rPIO_SODR_A = ROW1;
+		Delay(10);
+
+		// ROW2
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A = COL2 | COL3 | COL6 | COL7 ;
+		rPIO_SODR_A = ROW2;
+		Delay(10);
+		
+		// ROW3
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A = COL2 | COL3 | COL4 | COL5 | COL6 | COL7 ;
+		rPIO_SODR_A = ROW3;
+		Delay(10);
+		
+		// ROW4
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A = COL2 | COL3 | COL4 | COL5 | COL6 | COL7 ;
+		rPIO_SODR_A = ROW4;
+		Delay(10);
+		
+		// ROW5
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A =  COL2 | COL3 | COL4 | COL5 | COL6 | COL7 ;
+		rPIO_SODR_A = ROW5;
+		Delay(10);
+		
+		// ROW6
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A =  COL1 | COL3 | COL4 | COL5 | COL6 | COL8;
+		rPIO_SODR_A = ROW6;
+		Delay(10);
+		
+		// ROW7
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A =  COL1 | COL2 | COL4 | COL5 | COL7 | COL8;
+		rPIO_SODR_A = ROW7;
+		Delay(10);
+		
+		// ROW8
+		rPIO_CODR_A = PORTA;
+		rPIO_SODR_A =  COL1 | COL2 | COL3 | COL6 | COL7 | COL8;
+		rPIO_SODR_A = ROW8;
+		Delay(10);	
 	}
+
+	return 0;
 }
+
